@@ -2,43 +2,26 @@
 
     include 'db_connect.php';
 
-    // We initailly set query to empty.  So it can show us everything when we start.
     $query = ""; 
 
-    // We use get here. Because we want to be able to share the search url or change it from url
-    // http://localhost/sites/333/samplecode/search.php?query=apple   <-- se apple at the end is GET URI parameter
-    // We change the query here. if there is a value in it.
-
-    // 1. Use $_GET for search so users can bookmark search results or share the link
     if(isset($_GET['query'])){                      
         $query = $_GET['query'];
     }
 
-    // 2. The Wildcard: 
-    // $searchTerm = "%$query%" means "find any name that CONTAINS these letters"
-    // $searchTerm = "query%" would mean "must START with these letters"
+
     $searchTerm = "%$query%"; 
 
-    // 3. Using 'LIKE' instead of '=' allows for partial matches
-    $stmt = $conn->prepare("SELECT * FROM items where name LIKE ? "); 
+    $stmt = $conn->prepare("SELECT * FROM posts  where post_text LIKE ? "); 
     $stmt->execute([$searchTerm]);
 ?>
-
 
 
 <!DOCTYPE html>
 <html>
 <body>
-    <h1>Items List</h1>
-    <nav>
-        <a href="create.php" >Create new item</a> | 
-        <a href="index.php" >Index</a> | <!-- index.php is the default name for the first page to open in any php folder -->
-        <a href="search.php" >Search for items</a> |
-        <a href="search_by_username.php" >Search by username</a> |
-        <a href="list.php" >List items</a> 
-    </nav>
+    <h1>Search Posts</h1>
     
-    <br/><br/>
+    <br/>
 
     <form method='GET' action="">
         Name: <input type='text' name='query' />
@@ -46,27 +29,24 @@
     </form>
     <br/>
 
-    <table border='1'>
+    <table border=1>
         <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Quantity</th>
-            <th>Price</th>
-            <th>User Id</th>
+            <th>Post ID</th>
+            <th>User ID</th>
+            <th>Post Text</th>
+            <th>Image</th>
+            <th>Date</th>
         <tr>
 
         <?php 
-        /* 4. The Fetch Loop:
-           $stmt->fetch() grabs one row at a time. 
-           The 'while' loop continues as long as there is data left in the database.
-        */
+        
             while($row = $stmt->fetch()){ ?>
         <tr>
-            <td><?php echo $row['id'] ?></td>
-            <td><?php echo $row['name'] ?></td>
-            <td><?php echo $row['quantity'] ?></td>
-            <td><?php echo $row['price'] ?></td>
+            <td><?php echo $row['post_id'] ?></td>
             <td><?php echo $row['user_id'] ?></td>
+            <td><?php echo $row['post_text'] ?></td>
+            <td><img src="uploads/<?php echo $row['image_path']; ?>" width="150"></td>
+            <td><?php echo $row['created_at'] ?></td>
         <tr>
         <?php } ?>
 
