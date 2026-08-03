@@ -1,7 +1,6 @@
 <?php
 include '../db_connect.php';
 
-// Start session to remember the logged-in user
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -9,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-    // Basic validation
+    
     $flag = true;
     $message = "";
 
@@ -30,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if($flag) {
 
-        // Check email and hashed password in the database
+        
         $stmt = $conn->prepare(
             "SELECT * FROM users WHERE email = ? AND password_hash = ?"
         );
@@ -46,12 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             $message = "Welcome ".$row['full_name'];
 
-            // Store logged-in user information in the session
+            
             $_SESSION['user_id'] = $row['user_id'];
             $_SESSION['email'] = $row['email'];
             $_SESSION['full_name'] = $row['full_name'];
 
-            // Temporary redirect
+            
             header('location: ../index.php');
             exit;
 
