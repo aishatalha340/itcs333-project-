@@ -3,14 +3,13 @@ include 'db_connect.php';
 
 session_start();
 
-// User must be logged in
+
 if(!isset($_SESSION['user_id'])){
     header('location: sessions/login.php');
     exit;
 }
 
-// Get all posts with the author's name
-// Newest posts appear first
+
 $stmt = $conn->prepare("
     SELECT posts.*, users.full_name
     FROM posts
