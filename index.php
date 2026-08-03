@@ -1,86 +1,45 @@
 <?php
-include 'db_connect.php';
+    include 'db_connect.php';
 
-session_start();
-
-
-if(!isset($_SESSION['user_id'])){
-    header('location: sessions/login.php');
-    exit;
-}
-
-
-$stmt = $conn->prepare("
-    SELECT posts.*, users.full_name
-    FROM posts
-    JOIN users ON posts.user_id = users.user_id
-    ORDER BY posts.created_at DESC
-");
-
-$stmt->execute();
+    
+    $stmt = $conn->prepare("SELECT * FROM posts ORDER BY created_at DESC");
+    $stmt->execute();
 ?>
 
 <!DOCTYPE html>
 <html>
 <body>
-
-    <h1>Community Blog</h1>
-
-    <h3>
-        Welcome <?php echo htmlspecialchars($_SESSION['full_name']); ?>
-    </h3>
-
+    <h1>Global Feed</h1>
     <nav>
-        <a href="index.php">Home</a> |
-        <a href="create.php">Create Post</a> |
-        <a href="search.php">Search</a> |
-        <a href="sessions/profile.php">Edit Profile</a> |
-        <a href="sessions/logout.php">Logout</a>
+        <a href="index.php" >Home</a> | 
+        <a href="search.php" >Search</a> | 
+        <a href="create.php" >Create Your Post</a> | 
     </nav>
+    
+    <table border='1'>
+        <tr>
+            <th>Post ID</th>
+            <th>User ID</th>
+            <th>Post</th>
+            <th>Image</th>
+            <th>Date</th>
+            <th>Delete</th>
 
-    <hr>
+        </tr>
 
-    <h2>Global Feed</h2>
+        <?php 
+        
+        while($row = $stmt->fetch()){ ?>
+        <tr>
+            <td><?php echo $row['post_id'] ?></td>
+            <td><?php echo $row['user_id'] ?></td>
+            <td><?php echo $row['post_text'] ?></td>
+            <td><img src="uploads/<?php echo $row['image_path']; ?>" width="150"></td>
+            <td><?php echo $row['created_at'] ?></td>
+             <td>  <a href="delete_post.php?post_id=<?php echo $row['post_id']; ?>" >Delete</a> </td>
 
-    <?php while($row = $stmt->fetch(PDO::FETCH_ASSOC)){ ?>
-
-        <div>
-            <h3>
-                <?php echo htmlspecialchars($row['full_name']); ?>
-            </h3>
-
-            <p>
-                <?php echo htmlspecialchars($row['post_text']); ?>
-            </p>
-
-            <?php if(!empty($row['image_path'])){ ?>
-                <img
-                    src="<?php echo htmlspecialchars($row['image_path']); ?>"
-                    width="300"
-                    alt="Post Image"
-                >
-            <?php } ?>
-
-            <p>
-                Posted:
-                <?php echo $row['created_at']; ?>
-            </p>
-
-            <a href="show.php?id=<?php echo $row['post_id']; ?>">
-                View Details
-            </a>
-
-            <?php if($row['user_id'] == $_SESSION['user_id']){ ?>
-                |
-                <a href="delete.php?id=<?php echo $row['post_id']; ?>">
-                    Delete
-                </a>
-            <?php } ?>
-
-            <hr>
-        </div>
-
-    <?php } ?>
-
+        </tr>
+        <?php } ?>
+        </table>
 </body>
 </html>

@@ -9,16 +9,15 @@ if (!isset($_SESSION['user_id'])) {
 
 $current_userID= $_SESSION['user_id'];
 
-if (isset($_GET['id'])) {
-    $id = $_GET['id'];
+if (isset($_GET['post_id'])) {
+    $id = $_GET['post_id'];
     $stmt = $conn->prepare("SELECT *  FROM posts  WHERE post_id = ? AND user_id = ?");
     $stmt->execute([$id,$current_userID]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {     
-    $id = $_POST['id'];
+    $id = $_POST['post_id'];
 
     
     $stmt = $conn->prepare("DELETE FROM posts WHERE post_id = ? AND user_id=?");
@@ -45,8 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div></li>
         </ul>
         <form method="POST" action="">
-            <input type="hidden" name="id" value="<?php echo $row['post_id']; ?>">
-            <button name='delete_btn' type="submit">Yes, Delete</button>
+        <input type="hidden" name="post_id" value="<?php echo $row['post_id']; ?>">
+        <button name='delete_btn' type="submit">Yes, Delete</button>
         </form>
 
         
