@@ -19,6 +19,13 @@
 <!DOCTYPE html>
 <html>
 <body>
+
+    <nav>
+        <a href="index.php" >Home</a> | 
+        <a href="search.php" >Search</a> | 
+        <a href="create_post.php" >Create Your Post</a> | 
+
+    </nav>
     <h1>Search Posts</h1>
     
     <br/>
