@@ -11,7 +11,7 @@
 <body>
     <h1>Global Feed</h1>
     <nav>
-        <a href="home.php" >Home</a> | 
+        <a href="index.php" >Home</a> | 
         <a href="search.php" >Search</a> | 
     </nav>
     
