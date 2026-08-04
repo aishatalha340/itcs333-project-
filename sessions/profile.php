@@ -1,59 +1,115 @@
 <?php
-    include '../db_connect.php';
-    
-    // 1. Start a session: This is required to access the $_SESSION array
-    session_start();
+include "../db_connect.php";
+session_start();
 
-    // 2. SECURITY CHECK: Beginners should always check if the session exists.
-    // If the user isn't logged in, $_SESSION['user_id'] won't exist and the page will crash.
-    if (!isset($_SESSION['user_id'])) {
-        header("Location: login.php"); // Send them to login if they aren't authorized
-        exit(); // Stop the script here
+// if there is no user id in session the  user not login
+if(!isset($_SESSION['user_id'])){
+    header("Location: login.php");
+    exit();
+}
+
+// to take the user id that save in session and add in $user_id.
+//WHERE user_id=? to know which user we need to update  their data
+$user_id=$_SESSION['user_id'];
+    $stmt=$conn->prepare("SELECT full_name,email,password_hash,profile_image FROM users WHERE user_id=?");
+    $stmt->execute([$user_id]);
+    $user=$stmt->fetch(PDO::FETCH_ASSOC);
+
+    // ITS MEAN IF THE USER DO SUBMIT AND SEND DATA IF YES DO THE CODE OF UPDATE
+    //  اوCheck if the user submitted the form using POST method. If yes, process the update.
+    // I use post not session because we need to take the new data the user fill it  in form to direct change because in session we need to update it manual 
+    //$image_name=$user['profile_image']; نخلي صورة القديمه اذا المستخدم ما اختار صوره جديدة
+    //$_FILES['profile_image'جذي ناخذ الملف اللي رفعه المستخدم
+    //$_FILES['profile_image']['error'] == 0 انه الرفع مافيه اي مشكله
+    //time() . "_" . $_FILES['profile_image']['name'] نسوي اسم جديد للصورة
+    //move_uploaded_file() uploads تنقل الصورة من مكانها الى الفولدر 
+    // 
+
+    $message="";
+    if($_SERVER['REQUEST_METHOD']=='POST'){
+        $full_name=$_POST['full_name'];
+        $password=$_POST['password'];
+        $image_name=$user['profile_image'];
+        if(isset($_FILES['profile_image']) && $_FILES['profile_image']['error']==0){
+            $image_name=time()."_".$_FILES['profile_image']['name'];
+            $target="../uploads/".$image_name;
+            move_uploaded_file($_FILES['profile_image']['tmp_name'],$target);
+            
+        }
+        if(empty($full_name)){
+            $message="Full name cannot be empty";
+        }
+        if( !empty($password)&&strlen($password)<8){
+            $message="Password must be at least 8 characters";
+        }
+
+    /// if(!empty($password)){ المستخدم كتب باسورد جديد فلازم احدث الاسم و الباسورد مع تشفيره طبعاا
+    ///the update
+    if ($message==""){
+        if(!empty($password)){
+            $hashedpassword=hash('sha256',$password);
+            $stmt=$conn->prepare("UPDATE users SET full_name=?,password_hash=?,profile_image=? WHERE user_id=?");
+            $stmt->execute([$full_name,$hashedpassword,$image_name,$user_id]);
+            $_SESSION['full_name']=$full_name;///نحديث السشن
+            header("location:profile.php");
+            exit();
+        }else{
+            ///اذا خلا الباسورد فاضي 
+          $stmt=$conn->prepare("UPDATE users SET full_name=?,profile_image=? WHERE user_id=?");
+          $stmt->execute([$full_name,$image_name,$user_id]);
+          $_SESSION['full_name']=$full_name;
+          header("location:profile.php");
+          exit();
+
+        }
+        }
     }
-
-    /* 3. The Query:
-       We use 'WHERE user_id = ?' to ensure users only see THEIR own items.
-       Without this, every user would see every item in the database.
-    */
-    $stmt = $conn->prepare("SELECT * FROM items WHERE user_id = ?");
-    
-    /* 4. Execute: 
-       We pass the ID saved in the session during login.php.
-    */
-    $stmt->execute([$_SESSION['user_id']]);
+    //enctype="multipart/form-data"لان الصورة تعتبر ملف فبدونهاما بيطرش الى php
 ?>
-
 <!DOCTYPE html>
 <html>
-<body>
-    <h1>My Profile (My Items)</h1>
-    <p>Welcome, <?php echo $_SESSION['username']; ?>!</p>
-    
-    <nav>
-        <a href="create.php">Create new item</a> | 
-        <a href="index.php">View All Items</a> |
-        <a href="logout.php">Logout</a>
-    </nav>
-    
-    <table border='1'>
-        <tr>
-            <th>ID</th><th>Name</th><th>Quantity</th><th>Price</th><th>Actions</th>
-        </tr>
+    <head></head>
+    <body>
+        <h2>Edit Profile</h2>
+        <form method="POST" action="" enctype="multipart/form-data">
+            Full Name:<input type="text" name="full_name" value="<?php echo $user['full_name']; ?>">
+            <br><br>
+            Email:<input type="email" name="email" value="<?php echo $user['email']; ?>" disabled>
+            <br>
+            <label>profile Image:</label>
+            <input type="file" name="profile_image" id="profile_image">
+            <br>
+            <?php if(!empty($user['profile_image'])): //هل المستخدم عنده صورة محفوظة?>
+            <img id="preview"
+             src="../uploads/<?php echo $user['profile_image'];?>" 
+             width="120"> 
+             <?php else: ?>
+                <img id="preview"
+                src="" 
+                width="120"
+              style="display:none;"> 
+              <?php endif; ?>
 
+            New Password:<input type="password" name="password"><br><br>
+            <button type="submit">Update Profile</button>
+
+        </form>
         <?php 
-        // 5. Fetch Loop: Standard way to display rows one by one
-        while($row = $stmt->fetch()){ ?>
-        <tr>
-            <td><?php echo $row['id'] ?></td>
-            <td><?php echo $row['name'] ?></td>
-            <td><?php echo $row['quantity'] ?></td>
-            <td><?php echo $row['price'] ?></td>
-            <td>
-                <a href="delete.php?id=<?php echo $row["id"]; ?>">Delete</a></td>
-
-            </td>
-        </tr>
-        <?php } ?>
-    </table>
-</body>
+        if(!empty($message)){
+            echo "<p>$message</p>";
+        }
+         ?>
+         <script>
+            const imageInput=document.getElementById("profile_image");
+            const preview=document.getElementById("preview");
+            imageInput.addEventListener("change",function(){
+                const file =this.files[0];//جذي خذنا الصورة
+                if(file){
+                    preview.src=URL.createObjectURL(file);
+                    preview.style.display="block";//تطلع الصورة لان قابل كانت none
+                }
+            });
+         </script>
+        
+    </body>
 </html>
